@@ -76,12 +76,11 @@ void main()
 	if (client_socket == INVALID_SOCKET) cout << "Accept failed with error: " << WSAGetLastError() << endl;
 
 	//7) Получение и отправка данных:
-
 	do
 	{
-		CHAR recv_buffer[MTU] = {};
 		CHAR send_buffer[MTU] = "Hello client!!!";
-		iResult = recv(client_socket, recv_buffer, sizeof(recv_buffer) - 1, 0);			//Ожидает получение от клиента
+		CHAR recv_buffer[MTU] = {};
+		iResult = recv(client_socket, recv_buffer, sizeof(recv_buffer)-1, 0);			//Ожидает получение от клиента
 		if (iResult > 0)
 		{
 			INT iSendResult = 0;
