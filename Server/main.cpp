@@ -76,16 +76,22 @@ void main()
 	if (client_socket == INVALID_SOCKET) cout << "Accept failed with error: " << WSAGetLastError() << endl;
 
 	//7) Получение и отправка данных:
-	CHAR send_buffer[MTU] = "Hello Client!!!";
-	CHAR recv_buffer[MTU] = {};
 
 	do
 	{
-		iResult = recv(client_socket, recv_buffer, MTU, 0);			//Ожидает получение от клиента
+		CHAR recv_buffer[MTU] = {};
+		CHAR send_buffer[MTU] = "Hello client!!!";
+		iResult = recv(client_socket, recv_buffer, sizeof(recv_buffer) - 1, 0);			//Ожидает получение от клиента
 		if (iResult > 0)
 		{
+			INT iSendResult = 0;
 			cout << iResult << " Bytes received, Message: " << recv_buffer << endl;
-			INT iSendResult = send(client_socket, send_buffer, strlen(send_buffer), 0);
+			if (strcmp(recv_buffer, "exit") == 0)
+			{
+				cout << "Client disconnected" << endl;
+				iResult = 0;
+			}
+			else iSendResult = send(client_socket, send_buffer, strlen(send_buffer), 0);
 			if (iSendResult == SOCKET_ERROR)
 			{
 				cout << "Send failed with error: " << WSAGetLastError() << endl;

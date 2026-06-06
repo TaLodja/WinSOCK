@@ -71,21 +71,27 @@ void main()
 	freeaddrinfo(target);
 
 	//5) Отправка данных Серверу:
-	CHAR send_buffer[MTU] = "Hello Server!!!";
-	iResult = send(connect_socket, send_buffer, strlen(send_buffer), NULL);
-	if (iResult == SOCKET_ERROR)
-	{
-		cout << "Send failed with error: " << WSAGetLastError() << endl;
-		closesocket(connect_socket);
-		WSACleanup();
-		return;
-	}
-	else cout << "Sent " << iResult << " Bytes" << endl;
-
-	//6) Получение данных от Сервера:
-	CHAR recv_buffer[MTU] = {};		//receive_buffer[MTU] = {/*initialize_list*/}
 	do
 	{
+		CHAR send_buffer[MTU] = {};
+		cout << "Enter message: ";
+		fgets(send_buffer, sizeof(send_buffer), stdin);
+		int len = strlen(send_buffer);
+		if (len > 0 && send_buffer[len - 1] == '\n') send_buffer[len - 1] = '\0';
+
+		iResult = send(connect_socket, send_buffer, strlen(send_buffer), NULL);
+		if (iResult == SOCKET_ERROR)
+		{
+			cout << "Send failed with error: " << WSAGetLastError() << endl;
+			closesocket(connect_socket);
+			WSACleanup();
+			return;
+		}
+		else cout << "Sent " << iResult << " Bytes" << endl;
+		if (strcmp(send_buffer, "exit") == 0) cout << "Client send 'exit' to Server" << endl;
+
+		//6) Получение данных от Сервера:
+		CHAR recv_buffer[MTU] = {};
 		iResult = recv(connect_socket, recv_buffer, MTU, NULL);
 		if (iResult > 0) cout << recv_buffer << endl;
 		else if (iResult == 0) cout << "Nothing received from Server" << endl;
