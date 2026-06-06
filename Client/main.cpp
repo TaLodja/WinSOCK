@@ -1,6 +1,6 @@
 ﻿#ifndef WIN32_LEAN_AND_MEAN
-#define WIN32_LEAN_AND_MEAN //Это нужно, когда к проекту одновременно подключаются <WinCock2.h> и <Windows.h>
-#endif //!WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN		//Это нужно, когда к проекту одновременно подключаются <WinCock2.h> и <Windows.h>
+#endif // !WIN32_LEAN_AND_MEAN
 
 #include <iostream>
 #include <Windows.h>
