@@ -12,6 +12,8 @@ using namespace std;
 #pragma comment(lib, "WS2_32.lib") //Подгружает реализации функций из статической библиотеки для <WS2tcpip.h>
 #define MTU			1500			//Maximum Transmission Unut
 
+VOID Receive(SOCKET connect_socket);
+
 void main()
 {
 	setlocale(LC_ALL, "");
@@ -69,6 +71,16 @@ void main()
 		return;
 	}
 	freeaddrinfo(target);
+	DWORD dwThreadID = 0;
+	HANDLE hReceiveThread = CreateThread
+	(
+		NULL,
+		NULL,
+		(LPTHREAD_START_ROUTINE)Receive,
+		(LPVOID)connect_socket,
+		NULL,
+		&dwThreadID
+	);
 
 	//5) Отправка данных Серверу:
 	CHAR send_buffer[MTU] = "Hello Server!!!";
@@ -85,11 +97,7 @@ void main()
 		else cout << "Sent " << iResult << " Bytes" << endl;
 
 		//6) Получение данных от Сервера:
-		CHAR recv_buffer[MTU] = {};		//receive_buffer[MTU] = {/*initialize_list*/}
-		iResult = recv(connect_socket, recv_buffer, MTU, NULL);
-		if (iResult > 0) cout << recv_buffer << endl;
-		else if (iResult == 0) cout << "Nothing received from Server" << endl;
-		else cout << "Received failed with error: " << WSAGetLastError() << endl;
+
 		cout << "Введите сообщение: ";
 		SetConsoleCP(1251);				//Для понимания русского языка в сообщении
 		cin.getline(send_buffer, MTU);
@@ -104,4 +112,19 @@ void main()
 	//8) Освобождаем ресурс WinSOCK:
 	closesocket(connect_socket);
 	WSACleanup();
+}
+
+VOID Receive(SOCKET connect_socket)
+{
+	//6) Получение данных от Сервера:
+	INT iResult = 0;
+	CHAR recv_buffer[MTU] = {};		//receive_buffer[MTU] = {/*initialize_list*/}
+	do
+	{
+		ZeroMemory(recv_buffer, sizeof(recv_buffer));
+		iResult = recv(connect_socket, recv_buffer, MTU, NULL);
+		if (iResult > 0) cout << recv_buffer << endl;
+		else if (iResult == 0) cout << "Nothing received from Server" << endl;
+		else cout << "Received failed with error: " << WSAGetLastError() << endl;
+	} while (true);
 }
