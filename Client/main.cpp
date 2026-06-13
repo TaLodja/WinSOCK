@@ -72,25 +72,29 @@ void main()
 
 	//5) Отправка данных Серверу:
 	CHAR send_buffer[MTU] = "Hello Server!!!";
-	iResult = send(connect_socket, send_buffer, strlen(send_buffer), NULL);
-	if (iResult == SOCKET_ERROR)
-	{
-		cout << "Send failed with error: " << WSAGetLastError() << endl;
-		closesocket(connect_socket);
-		WSACleanup();
-		return;
-	}
-	else cout << "Sent " << iResult << " Bytes" << endl;
-
-	//6) Получение данных от Сервера:
-	CHAR recv_buffer[MTU] = {};		//receive_buffer[MTU] = {/*initialize_list*/}
 	do
 	{
+		iResult = send(connect_socket, send_buffer, strlen(send_buffer), NULL);
+		if (iResult == SOCKET_ERROR)
+		{
+			cout << "Send failed with error: " << WSAGetLastError() << endl;
+			closesocket(connect_socket);
+			WSACleanup();
+			return;
+		}
+		else cout << "Sent " << iResult << " Bytes" << endl;
+
+		//6) Получение данных от Сервера:
+		CHAR recv_buffer[MTU] = {};		//receive_buffer[MTU] = {/*initialize_list*/}
 		iResult = recv(connect_socket, recv_buffer, MTU, NULL);
 		if (iResult > 0) cout << recv_buffer << endl;
 		else if (iResult == 0) cout << "Nothing received from Server" << endl;
 		else cout << "Received failed with error: " << WSAGetLastError() << endl;
-	} while (iResult > 0);
+		cout << "Введите сообщение: ";
+		SetConsoleCP(1251);				//Для понимания русского языка в сообщении
+		cin.getline(send_buffer, MTU);
+		SetConsoleCP(866);				//Для понимания русского языка в сообщении
+	} while (strcmp(send_buffer, "exit") != 0);
 
 	//7) Разрываем TCP-соединение:
 	iResult = shutdown(connect_socket, SD_BOTH);

@@ -1,4 +1,6 @@
-﻿#ifndef WIN32_LEAN_AND_MEAN
+﻿#define _WINSOCK_DEPRECATED_NO_WARNINGS
+
+#ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
 #endif // !WIN32_LEAN_AND_MEAN
 
@@ -72,8 +74,11 @@ void main()
 	}
 
 	//6) Accept connection - Обработка входящих соединений
-	SOCKET client_socket = accept(listen_socket, NULL, NULL);		//ожидает запрос от клиента
+	SOCKADDR_IN client_addr;
+	INT client_addrlen = sizeof(client_addr);
+	SOCKET client_socket = accept(listen_socket, (SOCKADDR*)&client_addr, &client_addrlen);		//ожидает запрос от клиента
 	if (client_socket == INVALID_SOCKET) cout << "Accept failed with error: " << WSAGetLastError() << endl;
+	else cout << "CONNECTED ON " << inet_ntoa(client_addr.sin_addr) << ":" << ntohs(client_addr.sin_port) << endl;
 
 	//7) Получение и отправка данных:
 	CHAR send_buffer[MTU] = "Hello Client!!!";
@@ -81,11 +86,12 @@ void main()
 
 	do
 	{
+		ZeroMemory(recv_buffer, MTU);
 		iResult = recv(client_socket, recv_buffer, MTU, 0);			//Ожидает получение от клиента
 		if (iResult > 0)
 		{
 			cout << iResult << " Bytes received, Message: " << recv_buffer << endl;
-			INT iSendResult = send(client_socket, send_buffer, strlen(send_buffer), 0);
+			INT iSendResult = send(client_socket, recv_buffer, strlen(send_buffer), 0);
 			if (iSendResult == SOCKET_ERROR)
 			{
 				cout << "Send failed with error: " << WSAGetLastError() << endl;
