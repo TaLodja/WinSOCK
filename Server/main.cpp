@@ -1,4 +1,5 @@
 ﻿#define _WINSOCK_DEPRECATED_NO_WARNINGS
+#define _CRT_SECURE_NO_WARNINGS
 
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
@@ -142,11 +143,16 @@ VOID Shift(INT index)
 	hThreads[MAX_CONNECTIONS - 1] = NULL;
 	g_ActiveClients--;
 }
-VOID Broadcast(CHAR sz_message[])
+VOID Broadcast(CHAR sz_message[], SOCKADDR_IN addr)
 {
+	CHAR addrInfo[22] = {};
+	sprintf(addrInfo, "[%s:%i] => ", inet_ntoa(addr.sin_addr), ntohs(addr.sin_port));
 	for (int i = 0; i < g_ActiveClients; i++)
 	{
-		send(clients[i], sz_message, strlen(sz_message), 0);
+		CHAR buffer[MTU] = {};
+		strcpy(buffer, addrInfo);
+		strcat(buffer, sz_message);
+		send(clients[i], buffer, strlen(buffer), 0);
 	}
 }
 
@@ -157,6 +163,10 @@ VOID ClientHandle(SOCKET client_socket)
 	CHAR send_buffer[MTU] = "Hello Client!!!";
 	CHAR recv_buffer[MTU] = {};
 
+	SOCKADDR_IN client_addr;
+	INT client_addrlen = sizeof(client_addr);
+	getpeername(client_socket, (SOCKADDR*)&client_addr, &client_addrlen);		//возвращает IP и порт удаленного адреса (клиента); getsockname() - возвращает локальный адрес (в данном случае - сервера)
+
 	do
 	{
 		ZeroMemory(recv_buffer, MTU);
@@ -164,14 +174,7 @@ VOID ClientHandle(SOCKET client_socket)
 		if (iResult > 0)
 		{
 			cout << iResult << " Bytes received, Message: " << recv_buffer << endl;
-			/*INT iSendResult = send(client_socket, recv_buffer, strlen(send_buffer), 0);
-			if (iSendResult == SOCKET_ERROR)
-			{
-				cout << "Send failed with error: " << WSAGetLastError() << endl;
-				closesocket(client_socket);
-			}
-			else cout << iSendResult << " Bytes send" << endl;*/
-			Broadcast(recv_buffer);
+			Broadcast(recv_buffer, client_addr);
 		}
 		else if (iResult == 0) cout << "Nothing received from client" << endl;
 		else cout << "Receive failed with error: " << WSAGetLastError() << endl;
@@ -181,7 +184,6 @@ VOID ClientHandle(SOCKET client_socket)
 	iResult = shutdown(client_socket, SD_BOTH);
 	if (iResult == SOCKET_ERROR) cout << "shutdown failed with error: " << WSAGetLastError() << endl;
 	closesocket(client_socket);
-	//g_ActiveClients--;
 	Shift(GetClientIndex(GetCurrentThreadId()));
 	ExitThread(0);
 }
