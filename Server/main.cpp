@@ -11,9 +11,11 @@
 #include <WinSock2.h>
 #include <WS2tcpip.h>
 #include <iphlpapi.h>
+#include <FormatLastError.h>
 using namespace std;
 
 #pragma comment(lib, "WS2_32.lib")
+#pragma comment(lib, "FormatLastError.lib")
 
 #define MTU		1500
 #define MAX_CONNECTIONS		3
@@ -31,6 +33,8 @@ void main()
 	cout << "SERVER" << endl;
 
 	INT iResult = 0;
+	DWORD dwError = 0;
+	CHAR szError[USHRT_MAX + 1] = {};
 	//1) Init WinSOCK:
 	WSADATA wsaData;
 	WSAStartup(MAKEWORD(2, 2), &wsaData);
@@ -54,9 +58,11 @@ void main()
 
 	//3) Создаем сокет, который будет прослушивать канал (LISTENING) и принимать подключения от клиентов
 	SOCKET listen_socket = socket(binder->ai_family, binder->ai_socktype, binder->ai_protocol);
+	dwError = WSAGetLastError();
 	if (listen_socket == INVALID_SOCKET)
 	{
-		cout << "SOCKET creation failed with error: " << WSAGetLastError() << endl;
+		cout << "SOCKET creation failed with error: " << dwError << endl;
+		cout << FormatLastError(szError, dwError) << endl;
 		freeaddrinfo(binder);
 		WSACleanup();
 		return;
@@ -64,10 +70,12 @@ void main()
 
 	//4) Bind SOCKET - Привязываем сокет к IP-адреса и портам, которые он будет слушать
 	iResult = bind(listen_socket, binder->ai_addr, binder->ai_addrlen);
+	dwError = WSAGetLastError();
 	freeaddrinfo(binder);
 	if (iResult == SOCKET_ERROR)
 	{
-		cout << "Bind failed with error:" << WSAGetLastError() << endl;
+		cout << "Bind failed with error:" << dwError << endl;
+		cout << FormatLastError(szError, dwError) << endl;
 		closesocket(listen_socket);
 		WSACleanup();
 		return;
@@ -76,7 +84,9 @@ void main()
 	//5) Запускаеи прослушивание:
 	if (listen(listen_socket, MAX_CONNECTIONS) == SOCKET_ERROR) //1 - максимальное количество подключений
 	{
-		cout << "Listen failed with erroe: " << WSAGetLastError() << endl;
+		dwError = WSAGetLastError();
+		cout << "Listen failed with erroe: " << dwError << endl;
+		cout << FormatLastError(szError, dwError) << endl;
 		closesocket(listen_socket);
 		WSACleanup();
 		return;
@@ -88,7 +98,12 @@ void main()
 		SOCKADDR_IN client_addr;
 		INT client_addrlen = sizeof(client_addr);
 		SOCKET client_socket = accept(listen_socket, (SOCKADDR*)&client_addr, &client_addrlen);		//ожидает запрос от клиента
-		if (client_socket == INVALID_SOCKET) cout << "Accept failed with error: " << WSAGetLastError() << endl;
+		dwError = WSAGetLastError();
+		if (client_socket == INVALID_SOCKET)
+		{
+			cout << "Accept failed with error: " << dwError << endl;
+			cout << FormatLastError(szError, dwError) << endl;
+		}
 		else cout << "CONNECTED ON " << inet_ntoa(client_addr.sin_addr) << ":" << ntohs(client_addr.sin_port) << endl;
 
 		if (g_ActiveClients < MAX_CONNECTIONS)
@@ -112,7 +127,12 @@ void main()
 		{
 			CHAR szDeclineMessage[] = "Подключение невозможно, поскольку все места заняты, попробуйте позже.";
 			iResult = send(client_socket, szDeclineMessage, strlen(szDeclineMessage), 0);
-			if (iResult == SOCKET_ERROR) cout << "send Error: " << WSAGetLastError() << endl;
+			dwError = WSAGetLastError();
+			if (iResult == SOCKET_ERROR)
+			{
+				cout << "send Error: " << dwError << endl;
+				cout << FormatLastError(szError, dwError) << endl;
+			}
 			iResult = shutdown(client_socket, SD_BOTH);
 			if (iResult == SOCKET_ERROR) cout << "shutdown Error: " << WSAGetLastError() << endl;
 		}
@@ -160,8 +180,11 @@ VOID ClientHandle(SOCKET client_socket)
 	CHAR sz_client_address[32] = {};
 	//CHAR sz_client_connected[32] = {};
 	sprintf(sz_client_address, "[%s:%d]", inet_ntoa(client_address.sin_addr), ntohs(client_address.sin_port));
-	
+
 	INT iResult = 0;
+	DWORD dwError = 0;
+	CHAR szError[USHRT_MAX + 1] = {};
+
 	//7) Получение и отправка данных:
 	CHAR send_buffer[MTU] = "Hello Client!!!";
 	CHAR recv_buffer[MTU] = {};
@@ -171,6 +194,7 @@ VOID ClientHandle(SOCKET client_socket)
 		ZeroMemory(recv_buffer, MTU);
 		ZeroMemory(send_buffer, MTU);
 		iResult = recv(client_socket, recv_buffer, MTU, 0);			//Ожидает получение от клиента
+		dwError = WSAGetLastError();
 		if (iResult > 0)
 		{
 			sprintf(send_buffer, "%s:\t%s", sz_client_address, recv_buffer);
@@ -185,12 +209,21 @@ VOID ClientHandle(SOCKET client_socket)
 			else cout << iSendResult << " Bytes send" << endl;*/
 		}
 		else if (iResult == 0) cout << "Nothing received from client" << endl;
-		else cout << "Receive failed with error: " << WSAGetLastError() << endl;
+		else
+		{
+			cout << "Receive failed with error: " << dwError << endl;
+			cout << FormatLastError(szError, dwError) << endl;
+		}
 	} while (iResult > 0);
 
 	//8) Разрываем соединение с клиентом:
 	iResult = shutdown(client_socket, SD_BOTH);
-	if (iResult == SOCKET_ERROR) cout << "shutdown failed with error: " << WSAGetLastError() << endl;
+	dwError = WSAGetLastError();
+	if (iResult == SOCKET_ERROR)
+	{
+		cout << "shutdown failed with error: " << dwError << endl;
+		cout << FormatLastError(szError, dwError) << endl;
+	}
 	closesocket(client_socket);
 	//g_ActiveClients--;
 	Shift(GetClientIndex(GetCurrentThreadId()));

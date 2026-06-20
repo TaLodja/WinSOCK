@@ -12,7 +12,7 @@
 using namespace std;
 
 #pragma comment(lib, "WS2_32.lib") //Подгружает реализации функций из статической библиотеки для <WS2tcpip.h>
-#pragma comment(lib, "FormatLastError.lib");
+#pragma comment(lib, "FormatLastError.lib")
 
 #define MTU			1500			//Maximum Transmission Unut
 
