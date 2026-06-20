@@ -120,7 +120,7 @@ void main()
 			WSACleanup();
 			return;
 		}
-		else cout << "Sent " << iResult << " Bytes" << endl;
+		//else cout << "Sent " << iResult << " Bytes" << endl;
 
 		//6) Получение данных от Сервера:
 
