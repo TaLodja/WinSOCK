@@ -7,13 +7,16 @@
 #include <WinSock2.h>
 #include <WS2tcpip.h>
 #include <iphlpapi.h>
+#include <FormatLastError.h>
+
 using namespace std;
 
 #pragma comment(lib, "WS2_32.lib") //Подгружает реализации функций из статической библиотеки для <WS2tcpip.h>
+#pragma comment(lib, "FormatLastError.lib");
+
 #define MTU			1500			//Maximum Transmission Unut
 
 VOID Receive(SOCKET connect_socket);
-CHAR* FormatLastError(CHAR szBuffer[], DWORD dwError);
 
 void main()
 {
@@ -161,23 +164,4 @@ VOID Receive(SOCKET connect_socket)
 			cout << FormatLastError(szError, dwError) << endl;
 		}
 	} while (true);
-}
-
-CHAR* FormatLastError(CHAR szBuffer[], DWORD dwError)
-{
-	LPSTR lpError;
-	FormatMessage
-	(
-		FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-		NULL,
-		dwError,
-		MAKELANGID(LANG_NEUTRAL, LANG_SYSTEM_DEFAULT),
-		(LPSTR)&lpError,
-		NULL,
-		NULL
-	);
-	//cout << lpError << endl;
-	sprintf(szBuffer, "Error %i:%s", dwError, lpError);
-	LocalFree(lpError);
-	return szBuffer;
 }
