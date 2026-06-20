@@ -145,7 +145,7 @@ VOID Shift(INT index)
 }
 VOID Broadcast(CHAR sz_message[], SOCKADDR_IN addr)
 {
-	CHAR addrInfo[22] = {};
+	CHAR addrInfo[25] = {};
 	sprintf(addrInfo, "[%s:%i] => ", inet_ntoa(addr.sin_addr), ntohs(addr.sin_port));
 	for (int i = 0; i < g_ActiveClients; i++)
 	{
