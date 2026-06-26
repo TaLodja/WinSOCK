@@ -42,7 +42,8 @@ void main()
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_protocol = IPPROTO_TCP;
 
-	iResult = getaddrinfo("127.0.0.1", "27015", &hints, &target);   //127.0.0.1 - адрес замыкания на себя; 27015 - порт TCP
+	iResult = getaddrinfo("192.168.0.140", "27015", &hints, &target);
+	//iResult = getaddrinfo("127.0.0.1", "27015", &hints, &target);   //127.0.0.1 - адрес замыкания на себя; 27015 - порт TCP
 	//getaddrinfo() - по символьному имени получает числовой адрес (IP-адрес) целевого узла, к которму будем подключаться:
 	//загоняет "127.0.0.1", "27015" в структуру getaddrinfo()
 	//127.0.0.1 - имя или адрес целевого узла (можно задать localhost);
